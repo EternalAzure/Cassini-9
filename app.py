@@ -64,6 +64,23 @@ def map_figure(variable, geojson:GeoJSON):
     return fig
 
 
+
+@app.callback(
+    Output("graph", "figure"),
+    Input("region", "value"),
+    prevent_initial_call=True
+)
+def change_region(region:str):
+    print(region)
+    start = time.perf_counter()
+    geojson = get_geojson(region)
+    fig = Patch()
+    fig.data[0].geojson = geojson
+    end = time.perf_counter()
+    print(f"Region change: {end-start:.2f}sec")
+    return fig
+
+
 @app.callback(
     Output("graph", "figure", allow_duplicate=True),
     Input("color", "value"),
@@ -84,7 +101,14 @@ def change_color(color:str):
 
 
 app.layout = html.Div([
-    html.H4("PM10 particles in air"),
+    #html.H4("PM10 particles in air"),
+    html.P("Select a region:"),
+    dcc.RadioItems(
+        id="region",
+        options=["North", "West", "East", "South", "Venice"],
+        value="Venice",
+        inline=True
+    ),
     dcc.RadioItems(
         id="color",
         options=["Gradient", "Zones", "Viridis"],
