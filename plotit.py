@@ -14,7 +14,26 @@ from src.geodata import ForecastQuery, AnalysisQuery, GeoJSON
 def get_figure(df, geojson, locations, color, variable):
     color_max = min(df.iloc[:,1].max(), 40)
     fig = px.choropleth_map(df, geojson=geojson, locations=locations, color=color,
-                            color_continuous_scale="Viridis",
+                            #color_continuous_scale="Aggrnyl", # Eh
+                            #color_continuous_scale="Agsunset", # Eh
+                            #color_continuous_scale="Blackbody", # Surkea
+                            #color_continuous_scale="Bluered", # Eh
+                            #color_continuous_scale="Blugrn", # Eh
+                            #color_continuous_scale="Bluyl", # Hyvä
+                            #color_continuous_scale="Brwnyl", # Hyvä
+                            #color_continuous_scale="Bugn", # Hyvä
+                            color_continuous_scale="Bupu", # Erinomainen
+                            #color_continuous_scale="Burg", #
+                            #color_continuous_scale="Burgyl", #
+                            #color_continuous_scale="Cividis", #
+                            #color_continuous_scale="Darkmint", #
+                            #color_continuous_scale="Electric", #
+                            #color_continuous_scale="Emrld", #
+                            #color_continuous_scale="Blues", # Hyvä
+                            #color_continuous_scale="Inferno", # Surke
+                            #color_continuous_scale="Viridis", # Hyvä
+                            #color_continuous_scale="Edge", # Hyvä
+                            #color_continuous_scale="Phase", # Huono
                             range_color=(2, color_max), # NOTE Partikkeleiden raja-arvot väritystä varten
                             map_style="carto-positron",
                             zoom=3, center = {"lon":10, "lat":55},
