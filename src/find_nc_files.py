@@ -62,3 +62,8 @@ def find_nc_file(filename:str) -> Path:
         print(file)
     filename = input("Please give more specific name: ")
     return find_nc_file(filename)
+
+
+if __name__ == "__main__":
+    result = find_nc_file("ENS_FORECEST.nc")
+    print(result)
