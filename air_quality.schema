@@ -1,0 +1,51 @@
+DROP TABLE IF EXISTS analysis;
+DROP TABLE IF EXISTS forecasts;
+DROP TABLE IF EXISTS variables;
+DROP TABLE IF EXISTS types;
+DROP TABLE IF EXISTS units;
+PRAGMA foreign_keys = ON;
+
+
+CREATE TABLE variables (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    short_name TEXT UNIQUE NOT NULL,
+    long_name TEXT UNIQUE,
+    description TEXT
+);
+
+
+CREATE TABLE units (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    name TEXT UNIQUE  NOT NULL
+);
+
+
+CREATE TABLE analysis (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    variable_name TEXT NOT NULL,
+    unit_name TEXT  NOT NULL,
+    value REAL  NOT NULL,
+    lon REAL  NOT NULL,
+    lat REAL  NOT NULL,
+    datetime NUMERIC,
+    hash TEXT UNIQUE NOT NULL,
+    FOREIGN KEY(variable_name) REFERENCES variables(short_name),
+    FOREIGN KEY(unit_name) REFERENCES units(name)
+);
+
+
+CREATE TABLE forecasts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    variable_name TEXT NOT NULL,
+    unit_name TEXT NOT NULL,
+    value REAL NOT NULL,
+    lon REAL NOT NULL,
+    lat REAL NOT NULL,
+    datetime NUMERIC,
+    leadtime NUMERIC,
+    model TEXT,
+    hash TEXT UNIQUE NOT NULL,
+    FOREIGN KEY(variable_name) REFERENCES variables(short_name),
+    FOREIGN KEY(unit_name) REFERENCES units(name)
+);
+
