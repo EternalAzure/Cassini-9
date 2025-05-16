@@ -4,6 +4,7 @@ import hashlib
 import sqlite3
 from pprint import pprint
 from typing import TypeAlias
+from argparse import ArgumentParser
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -118,5 +119,22 @@ def store_to_database(origin:str, db_connection_string:str):
     print("Done.")
     
 
+
+def main():
+    parser = ArgumentParser(
+                    prog='Map It',
+                    description='Creates geojsons from netCDF'
+    )
+    parser.add_argument("filepath", help="Filename or path. Can be partial path. File is expected to be in data-folder.")
+    args = parser.parse_args()
+    filename:str = args.filepath
+
+    target = "AirQuality.db"
+    origin = find_nc_files.find_nc_file(filename)
+    
+    store_to_database(origin, target)
+
+
+
 if __name__ == "__main__":
-    store_to_database("FI-PM10-2025-05-10-00-23/ENS_FORECAST.nc")
+    main()
