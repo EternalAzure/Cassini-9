@@ -78,6 +78,36 @@ class AnalysisQuery:
 
 
 
+def query_forecast_db(query:ForecastQuery):
+    leadtime = query.time + timedelta(hours=query.leadtime)
+    with sqlite3.connect("AirQuality.db") as conn:
+        cursor = conn.cursor()
+        parameters = {
+            "variable": query.variable,
+            "datetime": query.time.strftime("%Y/%m/%d %H:%M"), 
+            "leadtime": leadtime.strftime("%Y/%m/%d %H:%M"), 
+            "model": query.model
+        }
+        if not query.model:
+            parameters.pop("model")
+            sql = f"""
+                SELECT variable_name, value, lon, lat, leadtime 
+                FROM forecasts 
+                WHERE variable_name=:variable AND datetime=:datetime AND leadtime<=:leadtime
+            """
+        else:
+            sql = f"""
+                SELECT variable_name, value, lon, lat, leadtime 
+                FROM forecasts 
+                WHERE variable_name=:variable AND datetime=:datetime AND leadtime<=:leadtime AND model=:model
+            """
+        results = cursor.execute(sql, parameters).fetchall()
+        df = pd.DataFrame(results, columns=["variable", "value", "lon", "lat", "leadtime"])
+        df['id'] = df.apply(lambda row: f"[{row['lon']}, {row['lat']}]", axis=1)
+        df = df[['id'] + [col for col in df.columns if col != 'id']]
+        return df
+
+
 def query_forecast_nc(query:ForecastQuery):
     ds = xr.open_dataset("data/netcdf/cams-europe-air-quality-forecasts/EU-forecast-PM10-2025-05-10-24/ENS_FORECAST.nc", engine="netcdf4", decode_timedelta=False)
     all_values = ds.variables["pm10_conc"][query.leadtime][0].data # lat lon
@@ -130,7 +160,6 @@ def query_forecast_nc(query:ForecastQuery):
     return df
 
 
-
 def query_analysis(query:AnalysisQuery):
     pass
 
@@ -150,6 +179,21 @@ def get_dataframe(query:ForecastQuery|AnalysisQuery):
     raise ValueError(f"Query must be instance of either {ForecastQuery.__name__} or {AnalysisQuery.__name__}")
 
 
+def get_geojson(geojson_path:str):
+    if os.path.exists(geojson_path):
+        with open(geojson_path, "r") as file:
+            geojson:GeoJSON = json.load(file) # Throws MemoryError
+            return geojson
+
+    print(f"No files found with {geojson_path=}")
+    print(f"Here is a list of existing geojsons:")
+    geojsons = glob.glob("data/geojson/*.geo.json")
+    for file in geojsons:
+        print(file)
+    raise ValueError(f"No files found with {geojson_path=}")
+
+
+
 if __name__ == "__main__":
     query = ForecastQuery(
         variable="PM10",
@@ -159,6 +203,6 @@ if __name__ == "__main__":
         limits={"north": 60, "south": 0, "west": -100, "east": 20}
     )
 
-    df = query_forecast_nc(query)
+    df = get_dataframe(query)
     #breakpoint()
     print("Miip!")
