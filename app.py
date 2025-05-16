@@ -64,6 +64,23 @@ def map_figure(variable, geojson:GeoJSON):
     return fig
 
 
+@app.callback(
+    Output("graph", "figure", allow_duplicate=True),
+    Input("color", "value"),
+    prevent_initial_call=True
+)
+def change_color(color:str):
+    zones = [(0,"#fcfafa"), (0.19,"#fcfafb"), (0.20,"#c7dff0"), (0.39,"#c7dff1"), (0.4,"#77baed"), (0.59,"#77baee"), (0.6,"#943fa2"), (0.79,"#943fa1"), (0.8,"#4d004a"), (1,"#4d004b")]
+    bupu = [(0,"#f7fcfd"), (0.11,"#e0ecf4"), (0.33,"#bfd3e6"), (0.44,"#9ebcda"), (0.55,"#8c96c6"), (0.66,"#8c6bb1"), (0.77,"#88419d"), (0.88,"#810f7c"), (1,"#4d004b")]
+    fig = Patch()
+    fig.data[0].colorscale = color
+    if color == "Gradient":
+        fig.data[0].colorscale = bupu
+    if color == "Zones":
+        fig.data[0].colorscale = zones
+    
+    return fig
+
 
 
 app.layout = html.Div([
