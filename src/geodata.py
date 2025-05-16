@@ -130,6 +130,26 @@ def query_forecast_nc(query:ForecastQuery):
     return df
 
 
+
+def query_analysis(query:AnalysisQuery):
+    pass
+
+
+def get_dataframe(query:ForecastQuery|AnalysisQuery):
+    if isinstance(query, ForecastQuery):
+        hours = query.leadtime +1
+        dfs = []
+        for _ in range(hours):
+            dfs.append(query_forecast_nc(query))
+            query.leadtime -= 1
+        df = pd.concat(dfs, ignore_index=True)
+        df = df.sort_values(by="leadtime", ascending=True)
+        return df
+    elif isinstance(query, AnalysisQuery):
+        return query_analysis(query)
+    raise ValueError(f"Query must be instance of either {ForecastQuery.__name__} or {AnalysisQuery.__name__}")
+
+
 if __name__ == "__main__":
     query = ForecastQuery(
         variable="PM10",
