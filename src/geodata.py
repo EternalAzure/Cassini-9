@@ -1,6 +1,7 @@
 import os
 import json
 import glob
+import copy
 import sqlite3
 import pandas as pd
 from dataclasses import dataclass
@@ -42,7 +43,39 @@ class ForecastQuery:
                     'Olive pollen'
                     'Ragweed pollen']
     time: datetime
-    leadtime: int
+    leadtime: int|list[int] # 0 zero means at 00:00 o'clock tec.
+    model: Optional[str]
+    limits: Optional[GeoJSONlimits]
+
+@dataclass
+class ForecastMultiQuery:
+    variable: Literal['PM2.5'
+                    'PM2.5 Nitrate'
+                    'PM2.5 Sulphate'
+                    'PM2.5 REC'
+                    'PM2.5 TEC'
+                    'PM2.5 SIA'
+                    'PM2.5 TOM'
+                    'PM10'
+                    'PM10 Dust'
+                    'PM10 Salt'
+                    'NH3'
+                    'CO'
+                    'HCHO'
+                    'OCHCHO'
+                    'NO2'
+                    'VOCs'
+                    'O3'
+                    'NO + NO2'
+                    'SO2'
+                    'Alder pollen'
+                    'Birch pollen'
+                    'Grass pollen'
+                    'Mugwort pollen'
+                    'Olive pollen'
+                    'Ragweed pollen']
+    time: datetime
+    leadtimes: list[int] # 0 zero means at 00:00 o'clock tec.
     model: Optional[str]
     limits: Optional[GeoJSONlimits]
 
@@ -79,7 +112,7 @@ class AnalysisQuery:
 
 
 def query_forecast_db(query:ForecastQuery):
-    leadtime = query.time + timedelta(hours=query.leadtime)
+    leadtime = query.time + timedelta(hours=query.leadtimes)
     with sqlite3.connect("AirQuality.db") as conn:
         cursor = conn.cursor()
         parameters = {
@@ -110,7 +143,7 @@ def query_forecast_db(query:ForecastQuery):
 
 def query_forecast_nc(query:ForecastQuery):
     ds = xr.open_dataset("data/netcdf/cams-europe-air-quality-forecasts/EU-forecast-PM10-2025-05-10-24/ENS_FORECAST.nc", engine="netcdf4", decode_timedelta=False)
-    all_values = ds.variables["pm10_conc"][query.leadtime][0].data # lat lon
+    all_values = ds.variables["pm10_conc"][query.leadtimes][0].data # lat lon
     all_longitudes = list(map(lambda lon: lon if lon < 180 else lon - 360, ds.variables["longitude"].data.tolist()))
     all_latitudes:list = ds.variables["latitude"].data.tolist()
 
@@ -144,7 +177,7 @@ def query_forecast_nc(query:ForecastQuery):
     results = np.concatenate((values_expanded, coordinates), axis=2)
 
     # Add leadtime to coordinates
-    time_array = np.full((len(latitude), len(longitude), 1), query.leadtime)
+    time_array = np.full((len(latitude), len(longitude), 1), query.leadtimes)
     results = np.concatenate((results, time_array), axis=2)
 
     # Reshape results for pd.DataFrame
@@ -164,19 +197,19 @@ def query_analysis(query:AnalysisQuery):
     pass
 
 
-def get_dataframe(query:ForecastQuery|AnalysisQuery):
-    if isinstance(query, ForecastQuery):
-        hours = query.leadtime +1
+def get_dataframe(query:ForecastMultiQuery|AnalysisQuery):
+    if isinstance(query, ForecastMultiQuery):
+        _query:ForecastQuery = copy.deepcopy(query)
         dfs = []
-        for _ in range(hours):
-            dfs.append(query_forecast_nc(query))
-            query.leadtime -= 1
+        for hour in query.leadtimes:
+            _query.leadtimes = hour
+            dfs.append(query_forecast_nc(_query))
         df = pd.concat(dfs, ignore_index=True)
         df = df.sort_values(by="leadtime", ascending=True)
         return df
     elif isinstance(query, AnalysisQuery):
         return query_analysis(query)
-    raise ValueError(f"Query must be instance of either {ForecastQuery.__name__} or {AnalysisQuery.__name__}")
+    raise ValueError(f"Query must be instance of either {ForecastMultiQuery.__name__} or {AnalysisQuery.__name__}")
 
 
 def get_geojson(geojson_path:str):
@@ -204,5 +237,5 @@ if __name__ == "__main__":
     )
 
     df = get_dataframe(query)
-    #breakpoint()
+    breakpoint()
     print("Miip!")

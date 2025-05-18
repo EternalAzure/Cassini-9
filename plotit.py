@@ -64,7 +64,7 @@ def main():
     df:pd.DataFrame = geodata.get_dataframe(ForecastQuery(
         variable=variable,
         time=datetime(2025, 5, 10, 0, 0),
-        leadtime=0,
+        leadtimes=0,
         model=None,
         limits=None
     ))
