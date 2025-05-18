@@ -85,19 +85,6 @@ def accumulation(dataset:pd.DataFrame, location:Coordinate, exposure_start:datet
     return inhaled_pollutants_accumulation
 
 
-def accumulation_as_dataframe(dataset:pd.DataFrame, location:Coordinate, start:datetime, time:int, air_intake_cubics_per_minute:float=None, air_intake_litres_per_minute:float=None):
-    if air_intake_cubics_per_minute and air_intake_litres_per_minute:
-        raise ValueError("Give only either air_intake_cubics_per_minute or air_intake_litres_per_minute")
-    if time < 0:
-        raise ValueError(f"Exposure can not be negative. {exposure_start=} {exposure_end=}")
-
-    for hour in range(time):
-        accumulation(dataset, location, )
-    
-
-    return inhaled_pollutants_accumulation
-
-
 
 
 if __name__ == "__main__":
